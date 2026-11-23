@@ -300,8 +300,8 @@ class Workgroup:
         self._soup = self.request(f"{self.group_url}")
         print(f"{self.group_url}")
         # ??? self._soup_start = self.request(self.url_start)
-        #self._pages = self.pages
-        #self._name = self.name()
+        self._pages = self.pages
+        self._name = self.name()
         if "Error 404" in self._soup.text:
             raise utils.InvalidIdError("Cannot find page")
 
@@ -412,8 +412,15 @@ class Workgroup:
     
     def _load_work_ids_working(self, page=1):   
         #url = f"{self.group_url}&page={page}"
-        url = f"{self.group_url}?page={page}"
-        soup = self.request(url)
+        if page ==1: 
+            soup = self._soup
+            print("using loaded page")
+        else:     
+            url = f"{self.group_url}?page={page}"
+            if self.filter: 
+                url = f"{self.group_url}&page={page}"
+            print(f"fetching data from '{url}'" )    
+            soup = self.request(url)
         #all_works_soup = soup.find("ol", {"class": ["index", "group"]})
         #works_soup = all_works_soup.find_all("li", {"role": "article"})
         works_soup = soup.find_all("li", {"role": "article"})
