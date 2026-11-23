@@ -225,7 +225,7 @@ def bookmark_info(work):
 
 
 class Workgroup:
-    def __init__(self, url, session=None, load=False, filter = False):
+    def __init__(self, url, session=None, load=True, filter = False):
         """Creates a new 'Work Group' object from a url
 
         Args:
