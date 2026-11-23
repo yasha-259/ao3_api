@@ -301,7 +301,7 @@ class Workgroup:
         print(f"{self.group_url}")
         # ??? self._soup_start = self.request(self.url_start)
         self._pages = self.pages
-        self._name = self.name()
+        self._name = self.name
         if "Error 404" in self._soup.text:
             raise utils.InvalidIdError("Cannot find page")
 
