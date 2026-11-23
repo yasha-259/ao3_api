@@ -167,6 +167,7 @@ class Session(GuestSession):
         payload = {'user[login]': username,
                    'user[password]': password,
                    'authenticity_token': self.authenticity_token}
+        time.sleep(60)
         post = self.post("https://archiveofourown.org/users/login", params=payload, allow_redirects=False)
         if not post.status_code == 302:
             raise utils.LoginError("Invalid username or password")
