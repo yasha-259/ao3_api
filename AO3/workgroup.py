@@ -64,7 +64,7 @@ class Workgroup:
             self._pages = self.pages
             self._name = self.name
             self._urls = self.urls
-            self._pages_html = {self.input_page:self._soup}
+            self._pages_html = {int(self.input_page):self._soup}
             self._works_dict= {}
 
         if load:
@@ -129,7 +129,7 @@ class Workgroup:
         self._pages = self.pages
         self._name = self.name
         self._urls = self.urls
-        self._pages_html = {1:self._soup}
+        self._pages_html = {int(self.input_page):self._soup}
         self._works_dict= {}
 
 
