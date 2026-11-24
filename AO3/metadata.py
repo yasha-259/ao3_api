@@ -15,6 +15,8 @@ def id_user(work):  # work is one li-element
     users = [user.replace("user-", "") for user in main if user.startswith("user-")]
     if ids: 
         id = ids[0]
+    else: 
+        id = None
     return {"id": id, "user_id": users}
 
 
