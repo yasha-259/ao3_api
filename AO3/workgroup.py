@@ -159,11 +159,11 @@ class Workgroup:
 
     @cached_property
     def pages(self):
-        pages = self._soup.find("ol", {"aria-label": "Pagination"})
-        if pages is None:
+        pagessoup = self._soup.find("ol", {"aria-label": "Pagination"})
+        if pagessoup is None:
             return 1
         n = 1
-        for li in pages.find_all("li"):
+        for li in pagessoup.find_all("li"):
             text = li.getText()
             if text.isdigit():
                 n = int(text)
