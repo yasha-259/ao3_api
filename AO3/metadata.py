@@ -11,9 +11,11 @@ def id_user(work):  # work is one li-element
     ## getting most important metadata
     main = work['class']
     cleaned_list = [x for x in main if x not in ['work', 'blurb', 'group']]
-    ids = [id.replace("work-", "") for id in main if id.startswith("work-")][0]
+    ids = [id.replace("work-", "") for id in main if id.startswith("work-")]#[0]
     users = [user.replace("user-", "") for user in main if user.startswith("user-")]
-    return {"id": ids, "user_id": users}
+    if ids: 
+        id = ids[0]
+    return {"id": id, "user_id": users}
 
 
 def required_tags(work):
@@ -230,6 +232,8 @@ def bookmark_info(work):
 def work_metadata_from_soup(work): #ie work = soup.find('li', role="article")
      work_metadata= id_user(work)
      work_id = work_metadata["id"]
+     if not work_id: 
+         return None, None
      # add required tags
      work_metadata = work_metadata | required_tags(work)| title_author(work)| stats(work)| tags(work)| fand(work)| summary(work)| some_date(work)| series(work) | last_visited(work) | bookmark_info(work)
      return work_id, work_metadata
