@@ -41,7 +41,8 @@ class Workgroup:
         pg_no = re.search('page=(\d*)', url)
         if pg_no: 
             pg_no= pg_no.group(1)
-        else pg_no=1    
+        else:
+            pg_no=1    
         self.input_page=pg_no
         
         self._work_ids = None
