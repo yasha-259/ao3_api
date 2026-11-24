@@ -160,7 +160,7 @@ class Workgroup:
 
     @cached_property
     def pages(self):
-        print(self._soup)
+        #print(self._soup)
         pagessoup = self._soup.find("ol", class_="pagination actions pagy")
         if pagessoup is None:
             return 1
