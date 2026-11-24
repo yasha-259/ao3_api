@@ -87,7 +87,10 @@ def fand(work):
 
 
 def summary(work):
-    summary = work.find("blockquote", class_="summary").text
+    summary = work.find("blockquote", class_="summary")
+    if summary: 
+        summary = summary.text
+    
     return {"summary": summary}
 
 
