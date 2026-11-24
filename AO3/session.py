@@ -144,7 +144,7 @@ class Session(GuestSession):
     AO3 session object
     """
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, timeout= 120):
         """Creates a new AO3 session object
 
         Args:
@@ -167,7 +167,7 @@ class Session(GuestSession):
         payload = {'user[login]': username,
                    'user[password]': password,
                    'authenticity_token': self.authenticity_token}
-        time.sleep(60)
+        time.sleep(timeout)
         post = self.post("https://archiveofourown.org/users/login", params=payload, allow_redirects=False)
         if not post.status_code == 302:
             raise utils.LoginError("Invalid username or password")
