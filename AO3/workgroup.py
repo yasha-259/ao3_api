@@ -255,7 +255,7 @@ class Workgroup:
                     tries+=1
             
             if html:
-                works_from_soup(html)
+                self.works_from_soup(html)
 
 
             if sleep is not None and sleep > 0:
