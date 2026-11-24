@@ -136,32 +136,33 @@ def last_visited(work):
     visited_num = 0
     mfl = False
     status = None
-    for viewed in work.find_all("h4", {"class": "viewed heading"}):
-        # print(viewed)
-        visited_num += 1
-        data_string = str(viewed)
-        date_str = re.search('<span>Last visited:</span> (\d{2} .+ \d{4})', data_string)
-        if date_str is not None:
-            raw_date = date_str.group(1)
-            date_time_obj = datetime.strptime(date_str.group(1), '%d %b %Y')
-            visited_date = date_time_obj.strftime('%Y-%m-%d')
-
-        visited_str = re.search('Visited (\d+) times', data_string)
-        if visited_str is not None:
-            # print(visited_str)
-            visited_num = int(visited_str.group(1))
-
-        mfl_str = re.search('Marked for Later.', data_string)
-        if mfl_str is not None:
-            mfl = True
-
-        if re.search('Latest version.', data_string) is not None:
-            status = 'latest version'
-        if re.search('Update available.', data_string) is not None:
-            status = 'update available'
-        if re.search('Minor edits made since then.', data_string) is not None:
-            status = 'latest version, minor edits'
-        status = f"{status}_{date_today}"
+    if "reading" in work["class"]:
+        for viewed in work.find_all("h4", {"class": "viewed heading"}):
+            # print(viewed)
+            visited_num += 1
+            data_string = str(viewed)
+            date_str = re.search('<span>Last visited:</span> (\d{2} .+ \d{4})', data_string)
+            if date_str is not None:
+                raw_date = date_str.group(1)
+                date_time_obj = datetime.strptime(date_str.group(1), '%d %b %Y')
+                visited_date = date_time_obj.strftime('%Y-%m-%d')
+    
+            visited_str = re.search('Visited (\d+) times', data_string)
+            if visited_str is not None:
+                # print(visited_str)
+                visited_num = int(visited_str.group(1))
+    
+            mfl_str = re.search('Marked for Later.', data_string)
+            if mfl_str is not None:
+                mfl = True
+    
+            if re.search('Latest version.', data_string) is not None:
+                status = 'latest version'
+            if re.search('Update available.', data_string) is not None:
+                status = 'update available'
+            if re.search('Minor edits made since then.', data_string) is not None:
+                status = 'latest version, minor edits'
+            status = f"{status}_{date_today}"
 
     return {"last_visited": visited_date,
             "visits": visited_num, "mfl": mfl, "updatestatus": status
@@ -177,30 +178,33 @@ def bookmark_info(work):
     bookmarked_by = None
     bookmarker = None
     # print(work)
-    bookm = work.find("div", class_="user module group")
-    if bookm:
+
+    if "bookmark" in work["class"]:
         bookmarked = True
-        # print(bookm)
-
-        ## date of bookmark
-        bm_date = bookm.find("p", class_="datetime").string
-        bm_date = datetime.strptime(bm_date, '%d %b %Y')
-        bm_date = bm_date.strftime('%Y-%m-%d')
-        # print(bm_date)
-
-        tags = bookm.find_all("a", class_="tag")
-        if tags:
-            for tag in tags:
-                own_tags.append(tag.string)  # .rstrip('\n'))
-
-        note = bookm.find("blockquote", class_="userstuff notes")
-        if note:
-            notes = note.text
-
-        bookmarker = bookm.find("a").text
-
-        if bookm.find("span", class_="rec"):
-            recommended = True
+        bookm = work.find("div", class_="user module group")
+        if bookm:
+            
+            # print(bookm)
+    
+            ## date of bookmark
+            bm_date = bookm.find("p", class_="datetime").string
+            bm_date = datetime.strptime(bm_date, '%d %b %Y')
+            bm_date = bm_date.strftime('%Y-%m-%d')
+            # print(bm_date)
+    
+            tags = bookm.find_all("a", class_="tag")
+            if tags:
+                for tag in tags:
+                    own_tags.append(tag.string)  # .rstrip('\n'))
+    
+            note = bookm.find("blockquote", class_="userstuff notes")
+            if note:
+                notes = note.text
+    
+            bookmarker = bookm.find("a").text
+    
+            if bookm.find("span", class_="rec"):
+                recommended = True
 
         # Get whether the bookmark is recommended
         # for span in bookm.p.find_all("span"):
