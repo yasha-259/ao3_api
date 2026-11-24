@@ -104,7 +104,7 @@ class Workgroup:
             raise utils.InvalidIdError("Cannot find page")
         self._pages = self.pages
         self._name = self.name
-        self._urls = self.url
+        self._urls = self.urls
         self._pages_html = {1:self._soup}
         self._works_dict= {}
 
