@@ -38,7 +38,7 @@ class Workgroup:
         self.group_url = url
         self._work_ids = None
         self._pages = None
-        #self._name = None
+        self._name = None
         self._filter = filter 
 
         self._urls = None 
@@ -150,7 +150,10 @@ class Workgroup:
             return None
 
         heading = self._soup.find("h2", {"class": "heading"})
-        return heading.text.strip()
+        if heading: 
+            heading=heading.text.strip()
+            
+        return heading
 
     @cached_property
     def pages(self):
