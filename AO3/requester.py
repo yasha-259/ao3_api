@@ -7,7 +7,7 @@ import requests
 class Requester:
     """Requester object"""
     
-    def __init__(self, rqtw=-1, timew=60):
+    def __init__(self, rqtw=1, timew=60):
         """Limits the request rate to prevent HTTP 429 (rate limiting) responses.
         12 request per minute seems to be the limit.
 
