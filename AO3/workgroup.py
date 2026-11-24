@@ -1,4 +1,5 @@
 from datetime import date
+from datetime import datetime
 from functools import cached_property
 import datetime
 import re
@@ -10,218 +11,7 @@ from .common import get_work_from_banner
 from .requester import requester
 from .users import User
 from .works import Work
-
-
-from datetime import datetime
-
-
-def id_user(work): # work is one li-element
-    ## getting most important metadata
-    main = work['class']
-    cleaned_list = [x for x in main if x not in ['work', 'blurb', 'group']]
-    ids = [id.replace("work-","") for id in main if id.startswith("work-")][0]
-    users = [user.replace("user-","") for user in main if user.startswith("user-")]
-    return {"id":ids, "user_id":users}
-
-
-def required_tags(work): 
-    req_tags_html = work.find("ul", class_="required-tags")
-    # RATING
-    rating_l = req_tags_html.find("span", class_ = "rating")['class']
-    rating_l = [x for x in rating_l if x not in ['rating']]
-    rating = [rating.replace("rating-","") for rating in rating_l if rating.startswith("rating-")]
-    #print(rating)
-
-    # WARNING
-    warning_l = req_tags_html.find("span", class_ = "warnings")['class']
-    warning_l = [x for x in warning_l if x not in ['warning']]
-    warning = [warning.replace("warning-","") for warning in warning_l if warning.startswith("warning-")]
-    #print(warning)
-
-    # CATERGORY
-    categegory_l = req_tags_html.find("span", class_ = "category")['class']
-    categegory_l = [x for x in categegory_l if x not in ['category']]
-    category = [category.replace("category-","") for category in categegory_l if category.startswith("category-")]
-    #print(category)
-
-    # status
-    status_l = req_tags_html.find("span", class_ = "iswip")['class']
-    status_l = [x for x in status_l if x not in ['iswip']]
-    status = [status for status in status_l]
-    #print(status)
-
-    return {"rating": rating, "warning": warning, "categories": category, "status":status}
-
-
-def title_author(work):
-    header = work.find("h4", class_= "heading")
-    title = header.find("a").text # kinda risky vertraut auf title first <a>
-    authors = [author.string for author in header.find_all("a", rel= "author")]
-    return {"title":title, "authors":authors}
-
-def stats(work):
-    stats = work.find("dl", class_= "stats")
-    props = {}
-    for stat in stats.find_all("dd"):
-        #print(stat.string)
-        key = stat['class'][0]
-        #print(key)
-        props[key] = stat.text #[a.get_text(strip=True) for a in stat.find_all("a")]
-
-    chapters= props.get("chapters", "")
-    props["nchapters"] = chapters.split("/")[0]
-    props["expected_chapters"] =chapters.split("/")[-1]
-
-    return props
-
-def chaptercounts(metadict): 
-    chapters= metadict.get("chapters", "")
-    return {
-            "n_chapters" : chapters.split("/")[0],
-            "expected_chapters" : chapters.split("/")[-1]
-    }
-
-
-def fand(work):
-    header = work.find("h5", class_= "fandoms")
-    fandoms = [fandom.string for fandom in header.find_all("a", class_="tag")]
-    return {"fandoms":fandoms}
-
-def summary(work):
-    summary = work.find("blockquote", class_= "summary").text
-    return {"summary":summary}
-
-def tags(work): 
-    tags = work.find("ul", class_= "tags")
-    props = {}
-    for tag in tags.find_all("li"):
-        #print(stat.string)
-        content = tag.text
-        key = tag['class'][0]
-        value = props.get(key)
-        if not value: 
-            value = []
-        value.append(content)
-
-        props[key] = value
-        # print(props)
-    tags_list = props.get("freeforms",[])
-    props["tags"] = tags_list
-    props.pop("freeforms", None)
-    return props
-
-def some_date(work): 
-    some_date=work.find("p", class_="datetime").text
-    if some_date: 
-        date_time_obj = datetime.strptime(some_date, '%d %b %Y')
-        some_date = date_time_obj.strftime('%Y-%m-%d')
-    return {"date_updated":some_date}
-
-def series(work): 
-    series_return = [] 
-    series_l = work.find("ul", class_="series")
-    if series_l: 
-        for series in series_l.find_all("a"):
-            series_id = series["href"].replace("/series/","")
-            # print(series.text) 
-            series_return.append(f"{series.text} ({series_id})")
-
-    return {"series": series_return}
-    #return work.find("p", class_="datetime").text
-
-date_today = datetime.today().strftime('%Y-%m-%d')
-def last_visited(work): 
-    visited_date= None
-    visited_num = 0
-    mfl = False
-    status = None 
-    for viewed in work.find_all("h4", {"class": "viewed heading"}):
-        #print(viewed)
-        visited_num +=1
-        data_string = str(viewed)
-        date_str = re.search('<span>Last visited:</span> (\d{2} .+ \d{4})', data_string)
-        if date_str is not None:
-            raw_date = date_str.group(1)
-            date_time_obj = datetime.strptime(date_str.group(1), '%d %b %Y')
-            visited_date = date_time_obj.strftime('%Y-%m-%d')
-    
-        visited_str = re.search('Visited (\d+) times', data_string)
-        if visited_str is not None:
-            #print(visited_str)
-            visited_num = int(visited_str.group(1))
-
-                    
-        mfl_str = re.search('Marked for Later.', data_string)
-        if mfl_str is not None:
-            mfl = True
-
-        if re.search('Latest version.', data_string) is not None:
-            status = 'latest version'
-        if re.search('Update available.', data_string) is not None:
-            status = 'update available'
-        if re.search('Minor edits made since then.', data_string) is not None:
-            status = 'latest version, minor edits'      
-        status = f"{status}_{date_today}"
-
-    return {"last_visited":visited_date,
-            "visits":visited_num, "mfl":mfl, "updatestatus":status
-    }      
-
-
-def bookmark_info(work):
-    bookmarked=False
-    bm_date = None 
-    own_tags=[]
-    notes=None
-    recommended = False
-    bookmarked_by = None
-    bookmarker=None
-    #print(work)
-    bookm = work.find("div", class_="user module group")
-    if bookm: 
-        bookmarked=True
-        #print(bookm)
-
-        ## date of bookmark
-        bm_date = bookm.find("p", class_="datetime").string
-        bm_date = datetime.strptime(bm_date, '%d %b %Y')
-        bm_date = bm_date.strftime('%Y-%m-%d')
-        #print(bm_date)
-
-        tags = bookm.find_all("a", class_="tag")
-        if tags: 
-            for tag in tags: 
-                own_tags.append(tag.string) #.rstrip('\n'))
-
-        
-        note = bookm.find("blockquote", class_="userstuff notes")
-        if note: 
-            notes = note.text
-
-        bookmarker= bookm.find("a").text
-
-        if bookm.find("span", class_="rec"): 
-            recommended = True
-
-        # Get whether the bookmark is recommended
-        # for span in bookm.p.find_all("span"):
-        #     print(span)
-        #     if "title" in span.attrs.keys():
-        #         if span["title"] == "Rec":
-        #             recommended = True
-
-
-    return{
-        "bookmarked":bookmarked,
-        "date_bookmarked":bm_date,
-        "bookmarker_tags": own_tags, 
-        "notes":notes,
-        "bookmarked_by":bookmarker, 
-        "recommended": recommended
-    }         
-# ADD: Special: history 
-
-
+from .metadata import work_metadata_from_soup
 
 
 class Workgroup:
@@ -230,6 +20,11 @@ class Workgroup:
 
         Args:
             url (str): ao3-url for a group of works; can be user-work-page, search results etc; can also be series or collection url !!
+                        should now in theory, maybe just maybe, also work with bookmark/history/subscription pages (remove page counter though)
+                        i.e. url = session._subscriptions_url.format(session.username,1).replace("?page=1","")
+                        _subscriptions_url = "https://archiveofourown.org/users/{0}/subscriptions?page={1:d}"
+                        _bookmarks_url = "https://archiveofourown.org/users/{0}/bookmarks?page={1:d}"
+                        _history_url = "https://archiveofourown.org/users/{0}/readings?page={1:d}"
             session (AO3.Session, optional): Session object. Defaults to None.
             load (bool, optional): If true, loaded on initialization. Defaults to True.
 
@@ -245,6 +40,10 @@ class Workgroup:
         self._pages = None
         #self._name = None
         self._filter = filter 
+
+        self._urls = None 
+        self._pages_html = None 
+        self._works_dict= None
 
         if load:
             self.reload()
@@ -300,10 +99,15 @@ class Workgroup:
         self._soup = self.request(f"{self.group_url}")
         print(f"{self.group_url}")
         # ??? self._soup_start = self.request(self.url_start)
-        self._pages = self.pages
-        self._name = self.name
+
         if "Error 404" in self._soup.text:
             raise utils.InvalidIdError("Cannot find page")
+        self._pages = self.pages
+        self._name = self.name
+        self._urls = self.url
+        self._pages_html = {1:self._soup}
+        self._works_dict= {}
+
 
     @cached_property
     def url_start(self):
@@ -322,6 +126,11 @@ class Workgroup:
     def loaded(self):
         """Returns True if this series has been loaded"""
         return self._soup is not None
+
+    # @property
+    # def loaded_cache(self):
+    #     """Returns True if this series has been loaded"""
+    #     return self._soup is not None    
         
     @cached_property
     def authenticity_token(self):
@@ -358,9 +167,101 @@ class Workgroup:
             print(f"WARNING: this group of works contains more than {(n-1)*20} items on {n} pages.")
         return n
 
+    @cached_property
+    def urls(self):
 
-    
-    def get_work_ids(self, hist_sleep=3, start_page=0, max_pages=None, timeout_sleep=60):
+        if self._urls is None:
+          self._urls = {1: self.group_url}
+
+        delimiter = "?"
+        if self._filter: 
+            delimiter = "&"
+
+        pages = self.pages
+        if not pages: 
+            pages = 1
+
+        if pages ==1: 
+            return self._urls
+
+        for i in range(2,pages+1):
+            self._urls[i] = f"{self.group_url}{delimiter}page={i}"
+            return self._urls
+
+    # ****************************************
+    #               WORKING HERE             *
+    # ****************************************
+    def get_works(self,start_page=1, end_page=None, max_pages=None,sleep=30, timeout_sleep=120):
+        if self._works_dict is None:
+            self._works_dict={}
+
+        npages = self.pages
+        if not end_page: 
+            end_page = npages
+        if start_page > npages:
+            print(f"start_page out of range; Starting on last page no.{npages}.")
+            start_page = npages
+        if end_page > npages:
+            print(f"end_page out of range; Ending on last page no.{npages}.")
+            end_page = npages
+        if start_page > end_page:
+            print(f"start_page after end_page; Ending on start_page no.{start_page}.")
+            end_page = start_page
+        # if max_pages > self.pages:
+        #     max_pages = self.pages
+
+        pages_to_process = list(range(start_page,end_page+1))
+        if max_pages: 
+            pages_to_process = pages_to_process[:max_pages]
+        
+        print(f"Starting to process ... # Page(s): {len(pages_to_process)}")    
+        counter = 1
+
+        # Sonderfall: page 1 is already loaded from pages!! return has to be here positioned here 
+        # if len(pages_to_process)==1 and pages_to_process[0]==1:
+        #     print(f"Processing page {counter} of {len(pages_to_process)}")
+        #     return self._works_dict
+        #     ## ADD: retrieve data from soup     
+
+        #soups_dict = self._pages_html 
+        urls = self._urls
+        
+        for page in pages_to_process: 
+            tries = 1
+            print(f"Processing page {counter} of {len(pages_to_process)}")
+            loaded = False
+            html = self._pages_html.get(page, None)
+            if html: 
+                loaded = True
+
+            while loaded == False and tries<11:
+                url = urls[page]
+                try:
+                    print(f"fetching data from '{url}'" )    
+                    html = self.request(url)
+                    loaded = True
+                    self._pages_html[page]=html
+                except utils.HTTPError:
+                    print(f"Trial {tries} of 10")
+                    print(f"Loading being rate limited, sleeping for {timeout_sleep} seconds")
+                    time.sleep(timeout_sleep)
+                    tries+=1
+            
+            if html:
+                works_from_soup(html)
+
+
+            if sleep is not None and sleep > 0:
+                    print(f"Sleeping for {sleep} seconds")
+                    time.sleep(sleep)
+            counter+=1        
+
+        return self._works_dict
+
+
+    # ****************************************
+
+    def get_work_ids(self, hist_sleep=3, start_page=1, max_pages=None, timeout_sleep=60):
         """
         Arguments:
             sleep (int): The time to wait between page requests
@@ -374,7 +275,6 @@ class Workgroup:
 
           self._work_ids = {}
           #self._pagecount = self.pages()
-
 
           for page in range(start_page, self.pages):
                 print(f"Processing page {page+1} of {self.pages} pages.")
@@ -407,7 +307,6 @@ class Workgroup:
                     print(f"Sleeping for {hist_sleep} seconds")
                     time.sleep(hist_sleep)
                     
-
         return self._work_ids 
     
     def _load_work_ids_working(self, page=1):   
@@ -439,6 +338,19 @@ class Workgroup:
             if workname is not None and workid is not None:
                 self._work_ids[workid]= workname
 
+    def works_from_soup(self, soup):   
+        works = soup.find_all('li', role="article")
+        if works:
+            for work in works: 
+                #work_metadata= id_user(work)
+                #work_id = work_metadata["id"]
+                # add required tags
+                #work_metadata = work_metadata | required_tags(work)| title_author(work)| stats(work)| tags(work)| fand(work)| summary(work)| some_date(work)| series(work) | last_visited(work) | bookmark_info(work)
+                work_id, work_metadata = work_metadata_from_soup(work)
+                if work_id is not None:
+                    self._works_dict[int(work_id)]= work_metadata
+        else: 
+            print("No works in html")            
 
     def  _load_work_ids(self, page=1):   
         
