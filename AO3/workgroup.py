@@ -15,7 +15,7 @@ from .metadata import work_metadata_from_soup
 
 
 class Workgroup:
-    def __init__(self, url, session=None, load=True, filter = False):
+    def __init__(self, url, session=None, load=True, html = None, filter = False):
         """Creates a new 'Work Group' object from a url
 
         Args:
@@ -34,16 +34,37 @@ class Workgroup:
 
         self._session = session
         #self._soup_start = None
-        self._soup = None
+        
+
         self.group_url = url
+
+        pg_no = re.search('page=(\d*)', url)
+        if pg_no: 
+            pg_no= pg_no.group(1)
+        else pg_no=1    
+        self.input_page=pg_no
+        
         self._work_ids = None
         self._pages = None
         self._name = None
         self._filter = filter 
+        if "&" in url:
+            self._delimiter = "&"
+        else: 
+             self._delimiter = "?"
 
         self._urls = None 
         self._pages_html = None 
         self._works_dict= None
+
+        self._soup = None
+        if html: 
+            self._soup = BeautifulSoup(html, "lxml")
+            self._pages = self.pages
+            self._name = self.name
+            self._urls = self.url
+            self._pages_html = {self.input_page:self._soup}
+            self._works_dict= {}
 
         if load:
             self.reload()
@@ -178,27 +199,27 @@ class Workgroup:
     def urls(self):
 
         if self._urls is None:
-          self._urls = {1: self.group_url}
+          self._urls = {}#{1: self.group_url}
 
-        delimiter = "?"
-        if self._filter: 
-            delimiter = "&"
+        # delimiter = "?"
+        # if self._filter: 
+        #     delimiter = "&"
 
         pages = self.pages
         if not pages: 
             pages = 1
 
-        if pages ==1: 
-            return self._urls
+        # if pages ==1: 
+        #     return self._urls
 
-        for i in range(2,pages+1):
-            self._urls[i] = f"{self.group_url}{delimiter}page={i}"
+        for i in range(1,pages+1):#(2,pages+1):
+            self._urls[i] = f"{self.group_url}{self._delimiter}page={i}"
             return self._urls
 
     # ****************************************
     #               WORKING HERE             *
     # ****************************************
-    def get_works(self,start_page=1, end_page=None, max_pages=None,sleep=30, timeout_sleep=120):
+    def get_works(self,start_page=1, end_page=None, max_pages=None,sleep=30, timeout_sleep=120,skip_request=False):
         if self._works_dict is None:
             self._works_dict={}
 
@@ -240,7 +261,9 @@ class Workgroup:
             html = self._pages_html.get(page, None)
             if html: 
                 loaded = True
-
+            if skip_request: 
+                loaded = True
+                sleep=0
             while loaded == False and tries<11:
                 url = urls[page]
                 try:
