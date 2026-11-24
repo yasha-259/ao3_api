@@ -63,7 +63,7 @@ class Workgroup:
             self._soup = BeautifulSoup(html, "lxml")
             self._pages = self.pages
             self._name = self.name
-            self._urls = self.url
+            self._urls = self.urls
             self._pages_html = {self.input_page:self._soup}
             self._works_dict= {}
 
