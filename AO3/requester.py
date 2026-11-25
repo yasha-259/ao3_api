@@ -1,8 +1,10 @@
+# @title requester.py  
 import threading
 import time
 
 import requests
 
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36"}
 
 class Requester:
     """Requester object"""
@@ -65,8 +67,9 @@ class Requester:
             del kwargs["session"]
             req = sess.request(*args, **kwargs)
         else:
+            kwargs.setdefault("headers", HEADERS)
             req = requests.request(*args, **kwargs)
-            
+                    
         return req
 
 requester = Requester()
