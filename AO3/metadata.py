@@ -74,9 +74,17 @@ def stats(work):
 
 def chaptercounts(metadict):
     chapters = metadict.get("chapters", "")
+    n_chapters = chapters.split("/")[0],
+    expected_chapters=chapters.split("/")[-1]
+    if n_chapters == expected_chapters: 
+        complete= True 
+    else: 
+        complete = False
+
     return {
-        "n_chapters": chapters.split("/")[0],
-        "expected_chapters": chapters.split("/")[-1]
+        "nchapters": n_chapters,
+        "expected_chapters": expected_chapters, 
+        "complete": complete
     }
 
 
