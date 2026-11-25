@@ -1,3 +1,4 @@
+# @title session.py  
 import datetime
 import re
 import time
@@ -7,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from . import threadable, utils
-from .requester import requester
+from .requester import requester, HEADERS
 from .series import Series
 from .users import User
 from .works import Work
@@ -23,7 +24,8 @@ class GuestSession:
         self.authenticity_token = None
         self.username = ""
         self.session = requests.Session()
-        
+        self.session.headers.update(HEADERS)   
+
     @property
     def user(self):
         return User(self.username, self, False)
@@ -160,7 +162,7 @@ class Session(GuestSession):
         self.username = username
         self.url = "https://archiveofourown.org/users/%s"%self.username
         
-        self.session = requests.Session()
+        #self.session = requests.Session()
         
         soup = self.request("https://archiveofourown.org/users/login")
         self.authenticity_token = soup.find("input", {"name": 'authenticity_token'})["value"]
@@ -959,7 +961,6 @@ class Session(GuestSession):
                 # print(hist_item)
                 #if new not in self._history:
                 self._series_bookmarks[seriesid]= seriesname
-
 
 
 
